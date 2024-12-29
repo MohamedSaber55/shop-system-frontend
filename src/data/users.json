@@ -1,0 +1,94 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "firstName": "Alice Johnson",
+            "lastName": "Alice Johnson",
+            "email": "alice.johnson@example.com",
+            "phone": "123-456-7890",
+            "password": "password123",
+            "role": "admin"
+        },
+        {
+            "id": 2,
+            "firstName": "Bob Smith",
+            "lastName": "Bob Smith",
+            "email": "bob.smith@example.com",
+            "phone": "234-567-8901",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 3,
+            "firstName": "Charlie Brown",
+            "lastName": "Charlie Brown",
+            "email": "charlie.brown@example.com",
+            "phone": "345-678-9012",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 4,
+            "firstName": "David Wilson",
+            "lastName": "David Wilson",
+            "email": "david.wilson@example.com",
+            "phone": "456-789-0123",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 5,
+            "firstName": "Eva Adams",
+            "lastName": "Eva Adams",
+            "email": "eva.adams@example.com",
+            "phone": "567-890-1234",
+            "password": "password123",
+            "role": "admin"
+        },
+        {
+            "id": 6,
+            "firstName": "Frank Miller",
+            "lastName": "Frank Miller",
+            "email": "frank.miller@example.com",
+            "phone": "678-901-2345",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 7,
+            "firstName": "Grace Lee",
+            "lastName": "Grace Lee",
+            "email": "grace.lee@example.com",
+            "phone": "789-012-3456",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 8,
+            "firstName": "Henry Davis",
+            "lastName": "Henry Davis",
+            "email": "henry.davis@example.com",
+            "phone": "890-123-4567",
+            "password": "password123",
+            "role": "user"
+        },
+        {
+            "id": 9,
+            "firstName": "Isabella Clark",
+            "lastName": "Isabella Clark",
+            "email": "isabella.clark@example.com",
+            "phone": "901-234-5678",
+            "password": "password123",
+            "role": "admin"
+        },
+        {
+            "id": 10,
+            "firstName": "Jack White",
+            "lastName": "Jack White",
+            "email": "jack.white@example.com",
+            "phone": "012-345-6789",
+            "password": "password123",
+            "role": "user"
+        }
+    ]
+}

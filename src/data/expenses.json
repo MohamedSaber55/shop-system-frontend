@@ -1,0 +1,144 @@
+{
+    "expenses": [
+        {
+            "id": 1,
+            "amount": 500,
+            "date": "2024-10-01",
+            "category": "Rent",
+            "info": "Office rent payment"
+        },
+        {
+            "id": 2,
+            "amount": 200,
+            "date": "2024-10-03",
+            "category": "c",
+            "info": "Electricity bill"
+        },
+        {
+            "id": 3,
+            "amount": 1500,
+            "date": "2024-10-05",
+            "category": "Salaries",
+            "info": "Monthly salary for employee"
+        },
+        {
+            "id": 4,
+            "amount": 300,
+            "date": "2024-10-06",
+            "category": "Inventory",
+            "info": "Office supplies"
+        },
+        {
+            "id": 5,
+            "amount": 250,
+            "date": "2024-10-07",
+            "category": "Marketing",
+            "info": "Social media ads"
+        },
+        {
+            "id": 6,
+            "amount": 100,
+            "date": "2024-10-08",
+            "category": "Miscellaneous",
+            "info": "Team lunch"
+        },
+        {
+            "id": 7,
+            "amount": 600,
+            "date": "2024-10-09",
+            "category": "Rent",
+            "info": "Storage space rent"
+        },
+        {
+            "id": 8,
+            "amount": 80,
+            "date": "2024-10-10",
+            "category": "Utilities",
+            "info": "Internet bill"
+        },
+        {
+            "id": 9,
+            "amount": 2000,
+            "date": "2024-10-12",
+            "category": "Salaries",
+            "info": "Payroll processing"
+        },
+        {
+            "id": 10,
+            "amount": 400,
+            "date": "2024-10-14",
+            "category": "Inventory",
+            "info": "Hardware supplies"
+        },
+        {
+            "id": 11,
+            "amount": 350,
+            "date": "2024-10-15",
+            "category": "Marketing",
+            "info": "Print ads campaign"
+        },
+        {
+            "id": 12,
+            "amount": 50,
+            "date": "2024-10-17",
+            "category": "Miscellaneous",
+            "info": "Coffee and snacks"
+        },
+        {
+            "id": 13,
+            "amount": 550,
+            "date": "2024-10-18",
+            "category": "Rent",
+            "info": "Office space rent"
+        },
+        {
+            "id": 14,
+            "amount": 120,
+            "date": "2024-10-20",
+            "category": "Utilities",
+            "info": "Water bill"
+        },
+        {
+            "id": 15,
+            "amount": 1600,
+            "date": "2024-10-22",
+            "category": "Salaries",
+            "info": "Part-time worker salary"
+        },
+        {
+            "id": 16,
+            "amount": 220,
+            "date": "2024-10-23",
+            "category": "Inventory",
+            "info": "Software licenses"
+        },
+        {
+            "id": 17,
+            "amount": 450,
+            "date": "2024-10-25",
+            "category": "Marketing",
+            "info": "Email marketing tool"
+        },
+        {
+            "id": 18,
+            "amount": 90,
+            "date": "2024-10-27",
+            "category": "Miscellaneous",
+            "info": "Parking fees"
+        },
+        {
+            "id": 19,
+            "amount": 650,
+            "date": "2024-10-28",
+            "category": "Rent",
+            "info": "Warehouse rental"
+        },
+        {
+            "id": 20,
+            "amount": 190,
+            "date": "2024-10-29",
+            "category": "Utilities",
+            "info": "Gas bill"
+        }
+    ]
+}

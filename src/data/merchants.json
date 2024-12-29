@@ -1,0 +1,228 @@
+{
+    "merchants": [
+        {
+            "id": 1,
+            "name": "Merchant One",
+            "phone": "123-456-7890",
+            "address": "123 Main St, City, Country",
+            "purchases": [
+                "p1",
+                "p2",
+                "p3"
+            ],
+            "outstanding_balance": 250.00
+        },
+        {
+            "id": 2,
+            "name": "Merchant Two",
+            "phone": "234-567-8901",
+            "address": "456 Elm St, City, Country",
+            "purchases": [
+                "p4",
+                "p5"
+            ],
+            "outstanding_balance": 150.00
+        },
+        {
+            "id": 3,
+            "name": "Merchant Three",
+            "phone": "345-678-9012",
+            "address": "789 Pine St, City, Country",
+            "purchases": [
+                "p6",
+                "p7",
+                "p8"
+            ],
+            "outstanding_balance": 300.00
+        },
+        {
+            "id": 4,
+            "name": "Merchant Four",
+            "phone": "456-789-0123",
+            "address": "321 Oak St, City, Country",
+            "purchases": [
+                "p9",
+                "p10"
+            ],
+            "outstanding_balance": 200.00
+        },
+        {
+            "id": 5,
+            "name": "Merchant Five",
+            "phone": "567-890-1234",
+            "address": "654 Maple St, City, Country",
+            "purchases": [
+                "p11",
+                "p12",
+                "p13"
+            ],
+            "outstanding_balance": 400.00
+        },
+        {
+            "id": 6,
+            "name": "Merchant Six",
+            "phone": "678-901-2345",
+            "address": "987 Birch St, City, Country",
+            "purchases": [
+                "p14"
+            ],
+            "outstanding_balance": 50.00
+        },
+        {
+            "id": 7,
+            "name": "Merchant Seven",
+            "phone": "789-012-3456",
+            "address": "135 Cedar St, City, Country",
+            "purchases": [
+                "p15",
+                "p16"
+            ],
+            "outstanding_balance": 120.00
+        },
+        {
+            "id": 8,
+            "name": "Merchant Eight",
+            "phone": "890-123-4567",
+            "address": "246 Spruce St, City, Country",
+            "purchases": [
+                "p17",
+                "p18",
+                "p19"
+            ],
+            "outstanding_balance": 320.00
+        },
+        {
+            "id": 9,
+            "name": "Merchant Nine",
+            "phone": "901-234-5678",
+            "address": "357 Fir St, City, Country",
+            "purchases": [
+                "p20",
+                "p21"
+            ],
+            "outstanding_balance": 180.00
+        },
+        {
+            "id": 10,
+            "name": "Merchant Ten",
+            "phone": "012-345-6789",
+            "address": "468 Willow St, City, Country",
+            "purchases": [
+                "p22",
+                "p23",
+                "p24"
+            ],
+            "outstanding_balance": 600.00
+        },
+        {
+            "id": 11,
+            "name": "Merchant Eleven",
+            "phone": "123-456-0987",
+            "address": "579 Aspen St, City, Country",
+            "purchases": [
+                "p25"
+            ],
+            "outstanding_balance": 75.00
+        },
+        {
+            "id": 12,
+            "name": "Merchant Twelve",
+            "phone": "234-567-1098",
+            "address": "680 Chestnut St, City, Country",
+            "purchases": [
+                "p26",
+                "p27"
+            ],
+            "outstanding_balance": 130.00
+        },
+        {
+            "id": 13,
+            "name": "Merchant Thirteen",
+            "phone": "345-678-2109",
+            "address": "791 Hickory St, City, Country",
+            "purchases": [
+                "p28",
+                "p29",
+                "p30"
+            ],
+            "outstanding_balance": 550.00
+        },
+        {
+            "id": 14,
+            "name": "Merchant Fourteen",
+            "phone": "456-789-3210",
+            "address": "902 Poplar St, City, Country",
+            "purchases": [
+                "p31"
+            ],
+            "outstanding_balance": 25.00
+        },
+        {
+            "id": 15,
+            "name": "Merchant Fifteen",
+            "phone": "567-890-4321",
+            "address": "213 Sycamore St, City, Country",
+            "purchases": [
+                "p32",
+                "p33"
+            ],
+            "outstanding_balance": 95.00
+        },
+        {
+            "id": 16,
+            "name": "Merchant Sixteen",
+            "phone": "678-901-5432",
+            "address": "324 Walnut St, City, Country",
+            "purchases": [
+                "p34",
+                "p35",
+                "p36"
+            ],
+            "outstanding_balance": 450.00
+        },
+        {
+            "id": 17,
+            "name": "Merchant Seventeen",
+            "phone": "789-012-6543",
+            "address": "435 Cherry St, City, Country",
+            "purchases": [
+                "p37"
+            ],
+            "outstanding_balance": 10.00
+        },
+        {
+            "id": 18,
+            "name": "Merchant Eighteen",
+            "phone": "890-123-7654",
+            "address": "546 Orange St, City, Country",
+            "purchases": [
+                "p38",
+                "p39",
+                "p40"
+            ],
+            "outstanding_balance": 370.00
+        },
+        {
+            "id": 19,
+            "name": "Merchant Nineteen",
+            "phone": "901-234-8765",
+            "address": "657 Lemon St, City, Country",
+            "purchases": [
+                "p41"
+            ],
+            "outstanding_balance": 80.00
+        },
+        {
+            "id": 20,
+            "name": "Merchant Twenty",
+            "phone": "012-345-9876",
+            "address": "768 Grapefruit St, City, Country",
+            "purchases": [
+                "p42",
+                "p43",
+                "p44"
+            ],
+            "outstanding_balance": 200.00
+        }
+    ]
+}
