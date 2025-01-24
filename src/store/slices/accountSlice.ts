@@ -7,13 +7,19 @@ interface GetAllUsersParams {
     token: string | null;
     params?: Record<string, unknown>;
 }
+interface Session {
+    userId: string;
+    loginTime: string;
+    logoutTime: string;
+    sessionDuration: string;
+}
 
 interface User {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
-    phone: string;
+    phoneNumber: string;
     role: number;
 }
 interface GetUserResponse {
@@ -22,10 +28,28 @@ interface GetUserResponse {
 }
 
 interface GetAllUsersResponse {
-    data: User[];
+    data: {
+        items: User[];
+        totalCount: number;
+        pageNumber: number;
+        pageSize: number;
+        totalPages: number;
+    }
 }
 interface RegisterResponse {
     message: string;
+}
+interface AddUserParams {
+    token: string | null;
+    body: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        phoneNumber: string;
+        role: number;
+        password: string;
+        ConfirmPassword: string;
+    }
 }
 
 interface AxiosError {
@@ -35,14 +59,17 @@ interface AxiosError {
 }
 
 export interface LoginResponse {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    token: string;
-    role: number;
-    image: string | null;
-    imageFile: string | null;
+    data: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        token: string;
+        role: number;
+        image: string | null;
+        imageFile: string | null;
+    };
+    message: string;
 }
 
 export interface LoginBody {
@@ -75,6 +102,10 @@ export interface VerifyOtpBody {
 export interface ResetPassResponse {
     message: string;
 }
+export interface GetUsersSessionsResponse {
+    message: string;
+    data: Session[]
+}
 export interface ResetPassBody {
     body: {
         email: string;
@@ -83,6 +114,12 @@ export interface ResetPassBody {
     }
 }
 
+interface MetaData {
+    totalCount: number;
+    pageNumber: number;
+    pageSize: number;
+    totalPages: number;
+}
 interface GetUserInfoParams {
     token: string | null;
     userId?: string;
@@ -90,11 +127,20 @@ interface GetUserInfoParams {
 }
 interface UpdateUserParams {
     token: string | null;
-    userId: string | undefined;
     body: {
-        firstName: string;
-        lastName: string;
+        id?: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phoneNumber?: string;
+        role?: number;
+        password?: string;
+        ConfirmPassword?: string;
     }
+}
+interface DeleteUserParams {
+    token: string | null;
+    userIds: (string | number)[]
 }
 
 // Define the async thunk with types
@@ -102,11 +148,27 @@ export const getAllUsers = createAsyncThunk<GetAllUsersResponse, GetAllUsersPara
     "users/getAllUsers",
     async ({ token, params }, { rejectWithValue }) => {
         try {
-            const response = await axios.get<GetAllUsersResponse>(`${apiUrl}/Account/getUsers`, {
+            const response = await axios.get<GetAllUsersResponse>(`${apiUrl}/Admin/getUsers`, {
                 headers: {
                     Authorization: `${tokenBearerKey}${token}`,
                 },
                 params: params,
+            });
+            return response.data;
+        } catch (error) {
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
+export const getUsersSessions = createAsyncThunk<GetUsersSessionsResponse, GetAllUsersParams>(
+    "users/getUsersSessions",
+    async ({ token }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetUsersSessionsResponse>(`${apiUrl}/Admin/all-users-session-data`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
             });
             return response.data;
         } catch (error) {
@@ -119,13 +181,12 @@ export const getUserInfo = createAsyncThunk<GetUserResponse, GetUserInfoParams>(
     "users/getUserInfo",
     async ({ token, params, userId }, { rejectWithValue }) => {
         try {
-            const response = await axios.get<GetUserResponse>(`${apiUrl}/Account/getUserInfo/${userId}`, {
+            const response = await axios.get<GetUserResponse>(`${apiUrl}/Admin/getUserInfo/${userId}`, {
                 headers: {
                     Authorization: `${tokenBearerKey}${token}`,
                 },
                 params: params,
             });
-
             return response.data;
         } catch (error) {
             const typedError = error as AxiosError;
@@ -133,15 +194,40 @@ export const getUserInfo = createAsyncThunk<GetUserResponse, GetUserInfoParams>(
         }
     }
 );
-export const deleteUser = createAsyncThunk<ResetPassResponse, GetUserInfoParams>(
-    "users/deleteUser",
-    async ({ token, userId }, { rejectWithValue }) => {
+// export const deleteUser = createAsyncThunk<ResetPassResponse, GetUserInfoParams>(
+//     "users/deleteUser",
+//     async ({ token, userId }, { rejectWithValue }) => {
+//         try {
+//             const response = await axios.delete<ResetPassResponse>(`${apiUrl}/Account/deleteUser/${userId}`, {
+//                 headers: {
+//                     Authorization: `${tokenBearerKey}${token}`,
+//                 },
+//             });
+//             return response.data;
+//         } catch (error) {
+//             const typedError = error as AxiosError;
+//             return rejectWithValue(typedError.response?.errors || "An error occurred");
+//         }
+//     }
+// );
+export const deleteUser = createAsyncThunk<ResetPassResponse, DeleteUserParams>(
+    "Admin/deleteUser",
+    async ({ token, userIds }, { rejectWithValue }) => {
+
         try {
-            const response = await axios.delete<ResetPassResponse>(`${apiUrl}/Account/deleteUser/${userId}`, {
-                headers: {
-                    Authorization: `${tokenBearerKey}${token}`,
-                },
-            });
+            const formData = new FormData();
+            userIds?.forEach((id) => formData.append("userIds", id.toString()));
+
+            const response = await axios.delete<ResetPassResponse>(
+                `${apiUrl}/Admin/deleteUsers`,
+                {
+                    data: formData,
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `${tokenBearerKey}${token}`,
+                    },
+                }
+            );
             return response.data;
         } catch (error) {
             const typedError = error as AxiosError;
@@ -150,24 +236,43 @@ export const deleteUser = createAsyncThunk<ResetPassResponse, GetUserInfoParams>
     }
 );
 export const updateUser = createAsyncThunk<ResetPassResponse, UpdateUserParams>(
-    "users/deleteUser",
-    async ({ token, userId, body }, { rejectWithValue }) => {
+    "users/updateUserInfo",
+    async ({ token, body }, { rejectWithValue }) => {
         try {
-            const response = await axios.put<ResetPassResponse>(`${apiUrl}/Account/deleteUser/${userId}`, body, {
+            const formData = new FormData();
+            Object.entries(body).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    formData.append(key, value as Blob | string);
+                }
+            });
+            const response = await axios.put<ResetPassResponse>(`${apiUrl}/Admin/updateUserInfo`, formData, {
                 headers: {
                     Authorization: `${tokenBearerKey}${token}`,
+                    "Content-Type": "multipart/form-data",
                 },
             });
             return response.data;
         } catch (error) {
+            console.log(error);
             const typedError = error as AxiosError;
             return rejectWithValue(typedError.response?.errors || "An error occurred");
         }
     }
 );
-export const register = createAsyncThunk<RegisterResponse>("users/register", async (data, { rejectWithValue }) => {
+export const addUser = createAsyncThunk<RegisterResponse, AddUserParams>("users/addUser", async ({ body, token }, { rejectWithValue }) => {
     try {
-        const response = await axios.post<RegisterResponse>(`${apiUrl}/Account/register`, data);
+        const formData = new FormData();
+        Object.keys(body).forEach((key) => {
+            formData.append(key, body[key as keyof typeof body] as string | Blob);
+        });
+
+        const response = await axios.post<RegisterResponse>(`${apiUrl}/Admin/register`, formData, {
+            headers: {
+                Authorization: `${tokenBearerKey}${token}`,
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+
         return response.data;
     } catch (error) {
         const typedError = error as AxiosError;
@@ -177,9 +282,10 @@ export const register = createAsyncThunk<RegisterResponse>("users/register", asy
 export const login = createAsyncThunk<LoginResponse, LoginBody>("users/login", async ({ body }, { rejectWithValue }) => {
     try {
         const response = await axios.post<LoginResponse>(`${apiUrl}/Account/login`, body);
-        localStorage.setItem("shoptkn", response.data.token)
+        localStorage.setItem("shoptkn", response.data.data.token)
         return response.data;
     } catch (error) {
+        console.log(error);
         const typedError = error as AxiosError;
         return rejectWithValue(typedError.response?.errors || "An error occurred");
     }
@@ -221,8 +327,11 @@ export const resetPass = createAsyncThunk<ResetPassResponse, ResetPassBody>("use
 // Define the initial state type
 interface UserState {
     users: User[];
+    users_sessions: Session[];
     user: User | null;
     token: string | null;
+    metaData: MetaData;
+    rowsEffected: number | null;
     loading: boolean;
     message: string;
     error: string | null;
@@ -231,16 +340,24 @@ interface UserState {
 // Initial state
 const initialState: UserState = {
     users: [],
+    users_sessions: [],
     user: {
         id: "",
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
+        phoneNumber: '',
         role: 0
     },
     token: localStorage.getItem("shoptkn") || "",
+    metaData: {
+        pageNumber: 0,
+        pageSize: 0,
+        totalCount: 0,
+        totalPages: 0
+    },
     message: "",
+    rowsEffected: 0,
     loading: false,
     error: null,
 };
@@ -264,22 +381,40 @@ const accountSlice = createSlice({
             })
             .addCase(getAllUsers.fulfilled, (state, action: PayloadAction<GetAllUsersResponse>) => {
                 state.loading = false;
-                state.users = action.payload.data;
+                state.users = action.payload.data.items;
+                state.metaData.pageNumber = action.payload.data.pageNumber;
+                state.metaData.pageSize = action.payload.data.pageSize;
+                state.metaData.totalCount = action.payload.data.totalCount;
+                state.metaData.totalPages = action.payload.data.totalPages;
             })
             .addCase(getAllUsers.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
-            //------------------------------- register------------------------------------------
-            .addCase(register.pending, (state) => {
+            //------------------------------- addUser------------------------------------------
+            .addCase(addUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(register.fulfilled, (state, action: PayloadAction<RegisterResponse>) => {
+            .addCase(addUser.fulfilled, (state, action: PayloadAction<RegisterResponse>) => {
                 state.loading = false;
                 state.message = action.payload.message;
             })
-            .addCase(register.rejected, (state, action) => {
+            .addCase(addUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getUsersSessions------------------------------------------
+            .addCase(getUsersSessions.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getUsersSessions.fulfilled, (state, action: PayloadAction<GetUsersSessionsResponse>) => {
+                state.loading = false;
+                state.message = action.payload.message;
+                state.users_sessions = action.payload.data;
+            })
+            .addCase(getUsersSessions.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
@@ -290,14 +425,14 @@ const accountSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
                 state.loading = false;
-                state.message = "Login Success";
-                state.token = action.payload.token;
+                state.message = action.payload.message;
+                state.token = action.payload.data.token;
                 if (state.user) {
-                    state.user.id = action.payload.id;
-                    state.user.email = action.payload.email;
-                    state.user.firstName = action.payload.firstName;
-                    state.user.lastName = action.payload.lastName;
-                    state.user.role = action.payload.role;
+                    state.user.id = action.payload.data.id;
+                    state.user.email = action.payload.data.email;
+                    state.user.firstName = action.payload.data.firstName;
+                    state.user.lastName = action.payload.data.lastName;
+                    state.user.role = action.payload.data.role;
                 }
             })
             .addCase(login.rejected, (state, action) => {

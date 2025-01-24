@@ -9,24 +9,30 @@ import {
     Snackbar,
     Alert,
     Divider,
-    MenuItem,
     Box,
+    Autocomplete,
 } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { getAllCustomers } from '../store/slices/customerSlice';
+import { addPayment } from '../store/slices/paymentSlice';
 
 const AddPayment = () => {
     const [open, setOpen] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
 
-    const customers = [
-        { id: 1, name: 'John Doe' },
-        { id: 2, name: 'Jane Smith' },
-        { id: 3, name: 'Michael Johnson' },
-    ];
+    const state = useSelector((state: RootState) => state.customers);
+    const userState = useSelector((state: RootState) => state.users);
+    const dispatch = useDispatch<AppDispatch>();
+    const customers = state?.customers;
+    React.useEffect(() => {
+        dispatch(getAllCustomers({ token: userState.token, }))
+    }, [dispatch, userState.token])
 
     const formik = useFormik({
         initialValues: {
-            amount: '',
-            customer: '',
+            amount: 0,
+            customerId: '',
             date: '',
             info: ''
         },
@@ -34,7 +40,7 @@ const AddPayment = () => {
             amount: Yup.number()
                 .required('Amount is required')
                 .positive('Amount must be a positive number'),
-            customer: Yup.string().required('Customer is required'),
+            customerId: Yup.string().required('Customer is required'),
             date: Yup.date()
                 .required('Date is required')
                 .max(new Date(), 'Date cannot be in the future'),
@@ -42,6 +48,7 @@ const AddPayment = () => {
         }),
         onSubmit: (values) => {
             console.log(values);
+            dispatch(addPayment({ token: userState.token, body: values }));
             setSuccessMessage('Payment added successfully!');
             setOpen(true);
             formik.resetForm();
@@ -87,23 +94,26 @@ const AddPayment = () => {
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <Autocomplete
                             fullWidth
-                            label="Choose Customer"
-                            name="customer"
-                            select
-                            variant="outlined"
-                            value={formik.values.customer}
-                            onChange={formik.handleChange}
-                            error={formik.touched.customer && Boolean(formik.errors.customer)}
-                            helperText={formik.touched.customer && formik.errors.customer}
-                        >
-                            {customers.map((cust) => (
-                                <MenuItem key={cust.id} value={cust.id}>
-                                    {cust.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                            id="customerId"
+                            value={customers.find(cust => cust.id === formik.values.customerId) || null}
+                            onChange={(_event, newValue) => {
+                                formik.setFieldValue('customerId', newValue ? newValue.id : null);
+                            }}
+                            options={customers}
+                            getOptionLabel={(option) => option.name}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Choose Customer"
+                                    variant="outlined"
+                                    error={formik.touched.customerId && Boolean(formik.errors.customerId)}
+                                    helperText={formik.touched.customerId && formik.errors.customerId}
+                                />
+                            )}
+                        />
                     </Grid>
                     <Grid item xs={12}>
                         <TextField

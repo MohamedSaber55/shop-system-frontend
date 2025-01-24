@@ -7,6 +7,7 @@ import productSlice from "./slices/productSlice.ts"
 import expensesSlice from "./slices/expenseSlice.ts"
 import customersSlice from "./slices/customerSlice.ts"
 import ordersSlice from "./slices/orderSlice.ts"
+import paymentsSlice from "./slices/paymentSlice.ts"
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
@@ -21,6 +22,7 @@ const store = configureStore({
         expenses: expensesSlice,
         customers: customersSlice,
         orders: ordersSlice,
+        payments: paymentsSlice,
     }
 })
 

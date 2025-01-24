@@ -181,7 +181,7 @@ const AddOrder = () => {
                             fullWidth
                             label="Order Date"
                             name="orderDate"
-                            type="date"
+                            type="datetime-local"
                             variant="outlined"
                             InputLabelProps={{ shrink: true }}
                             value={formik.values.orderDate}

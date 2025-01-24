@@ -52,17 +52,7 @@ interface OrderItem {
     discount: number;
     subTotal: number;
 }
-interface Order {
-    id?: string;
-    orderDate?: string;
-    userId?: string;
-    notes?: string;
-    totalDiscount?: number;
-    totalAmount?: number;
-    customerId: number;
-    orderItems: OrderItem[];
 
-}
 const UpdateOrder = () => {
     const [open, setOpen] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
@@ -74,7 +64,7 @@ const UpdateOrder = () => {
     const orderState = useSelector((state: RootState) => state.orders);
     const customers: Customer[] = customersState?.customers;
     const products: Product[] = productsState?.products;
-    const order: Order | null = orderState?.order;
+    const order = orderState?.order;
 
     useEffect(() => {
         dispatch(getOrderInfo({ token: userState.token, orderId: id }))
@@ -90,9 +80,11 @@ const UpdateOrder = () => {
 
     const formik = useFormik({
         initialValues: {
-            customerId: order?.customerId || null,
+            id: id,
+            customerId: order?.customer.id || null,
             orderDate: order?.orderDate || '',
             notes: order?.notes || '',
+            userId: order?.user?.id || '',
             totalAmount: 0,
             orderItems: order?.orderItems?.map((item) => ({
                 productId: item.productId,
@@ -126,8 +118,10 @@ const UpdateOrder = () => {
         onSubmit: (values) => {
             // Create the body structure to match UpdateOrderParams.body
             const sanitizedValues = {
+                id: values.id,
                 customerId: values.customerId ? String(values.customerId) : null,
                 orderDate: values.orderDate,
+                userId: values.userId,
                 notes: values.notes,
                 orderItems: values.orderItems.map(({ productId, quantity, discount, subTotal }) => ({
                     productId: String(productId),
@@ -136,12 +130,12 @@ const UpdateOrder = () => {
                     subTotal,
                 })),
             };
+            console.log(sanitizedValues);
 
             dispatch(updateOrder({ body: sanitizedValues, token: userState.token, orderId: id })).then(() => {
                 dispatch(getAllOrders({ token: userState.token }))
                 setSuccessMessage('Order updated successfully!');
                 setOpen(true);
-                formik.resetForm();
                 navigate("/orders")
             })
         }
@@ -268,7 +262,7 @@ const UpdateOrder = () => {
                                                         fullWidth
                                                         options={products}
                                                         getOptionLabel={(option) => option.name}
-                                                        value={products.find((p) => p.id === product.productId) || null}
+                                                        value={products.find((p) => p.id == product.productId) || null}
                                                         onChange={(_event, value) => {
                                                             formik.setFieldValue(`orderItems[${index}].productId`, value?.id || "");
                                                         }}
@@ -375,7 +369,7 @@ const UpdateOrder = () => {
                                         <Button
                                             color="primary"
                                             variant="outlined"
-                                            onClick={() => push({ productName: '', quantity: 0, pricePerUnit: 0, subTotal: 0 })}
+                                            onClick={() => push({ productId: "", quantity: 0, pricePerUnit: 0, subTotal: 0 })}
                                             startIcon={<Add />}
                                             sx={{ mt: 2 }}
                                         >

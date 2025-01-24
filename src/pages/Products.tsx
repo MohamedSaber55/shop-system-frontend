@@ -29,6 +29,7 @@ import { MdDelete, MdEdit } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { deleteProduct, getAllProducts } from '../store/slices/productSlice';
+import Barcode from 'react-barcode';
 
 interface Product {
     id?: number | string;
@@ -446,7 +447,14 @@ const Products = () => {
                                         </Box>
                                     </TableCell>
                                     <TableCell>{row.category.name}</TableCell>
-                                    <TableCell>{row.uniqueNumber}</TableCell>
+                                    <TableCell>{row.uniqueNumber && <Barcode
+                                        value={row.uniqueNumber}
+                                        width={0.75}
+                                        height={25}
+                                        displayValue={true}
+                                        fontSize={12}
+                                        background="#f8f8f8"
+                                        lineColor="#000" /> || "N/A"}</TableCell>
                                     <TableCell onClick={(e) => e.stopPropagation()}>
                                         <Stack direction="row" spacing={1}>
                                             <IconButton

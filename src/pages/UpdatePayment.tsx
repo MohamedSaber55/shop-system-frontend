@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -9,50 +9,59 @@ import {
     Snackbar,
     Alert,
     Divider,
-    MenuItem,
     Box,
+    Autocomplete,
 } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { getAllCustomers } from '../store/slices/customerSlice';
+import { getPaymentInfo, updatePayment } from '../store/slices/paymentSlice';
+import { useParams } from 'react-router-dom';
 
 const UpdatePayment = () => {
     const [open, setOpen] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
+    const params = useParams();
+    const paymentId = params.id;
 
-    // Static payment data for initial form values
-    const paymentData = {
-        amount: 150.0,
-        customer: '2',
-        date: '2023-11-01',
-        info: 'Monthly subscription fee',
-    };
+    const state = useSelector((state: RootState) => state.customers);
+    const userState = useSelector((state: RootState) => state.users);
+    const paymentState = useSelector((state: RootState) => state.payments);
+    const dispatch = useDispatch<AppDispatch>();
+    const customers = state?.customers;
+    const paymentDetails = paymentState.payment;
 
-    const customers = [
-        { id: 1, name: 'John Doe' },
-        { id: 2, name: 'Jane Smith' },
-        { id: 3, name: 'Michael Johnson' },
-    ];
+    useEffect(() => {
+        dispatch(getAllCustomers({ token: userState.token }));
+        if (paymentId) {
+            dispatch(getPaymentInfo({ paymentId, token: userState.token }));
+        }
+    }, [dispatch, userState.token, paymentId]);
 
     const formik = useFormik({
+        enableReinitialize: true,
         initialValues: {
-            amount: paymentData.amount,
-            customer: paymentData.customer,
-            date: paymentData.date,
-            info: paymentData.info
+            id: paymentDetails?.id || 0,
+            amount: paymentDetails?.amount || 0,
+            customerId: paymentDetails?.customerId || '',
+            date: paymentDetails?.date || '',
+            info: paymentDetails?.info || ''
         },
         validationSchema: Yup.object({
             amount: Yup.number()
                 .required('Amount is required')
                 .positive('Amount must be a positive number'),
-            customer: Yup.string().required('Customer is required'),
+            customerId: Yup.string().required('Customer is required'),
             date: Yup.date()
                 .required('Date is required')
                 .max(new Date(), 'Date cannot be in the future'),
             info: Yup.string()
         }),
         onSubmit: (values) => {
-            console.log(values);
+            dispatch(updatePayment({ token: userState.token, paymentId, body: values }));
             setSuccessMessage('Payment updated successfully!');
             setOpen(true);
-            formik.resetForm({ values });
+            formik.resetForm();
         }
     });
 
@@ -95,23 +104,26 @@ const UpdatePayment = () => {
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <Autocomplete
                             fullWidth
-                            label="Choose Customer"
-                            name="customer"
-                            select
-                            variant="outlined"
-                            value={formik.values.customer}
-                            onChange={formik.handleChange}
-                            error={formik.touched.customer && Boolean(formik.errors.customer)}
-                            helperText={formik.touched.customer && formik.errors.customer}
-                        >
-                            {customers.map((cust) => (
-                                <MenuItem key={cust.id} value={cust.id}>
-                                    {cust.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                            id="customerId"
+                            value={customers.find(cust => cust.id === formik.values.customerId) || null}
+                            onChange={(_event, newValue) => {
+                                formik.setFieldValue('customerId', newValue ? newValue.id : null);
+                            }}
+                            options={customers}
+                            getOptionLabel={(option) => option.name}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Choose Customer"
+                                    variant="outlined"
+                                    error={formik.touched.customerId && Boolean(formik.errors.customerId)}
+                                    helperText={formik.touched.customerId && formik.errors.customerId}
+                                />
+                            )}
+                        />
                     </Grid>
                     <Grid item xs={12}>
                         <TextField

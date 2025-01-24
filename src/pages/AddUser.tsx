@@ -18,37 +18,48 @@ import {
     IconButton,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { addUser, getAllUsers } from '../store/slices/accountSlice';
+import { useNavigate } from 'react-router-dom';
 
 const AddUser = () => {
     const [open, setOpen] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-
+    const dispatch = useDispatch<AppDispatch>();
+    const userState = useSelector((state: RootState) => state.users);
+    const navigate = useNavigate()
     const formik = useFormik({
         initialValues: {
-            name: '',
+            firstName: '',
+            lastName: '',
             email: '',
-            phone: '',
+            phoneNumber: '',
             password: '',
-            confirmPassword: '',
-            role: ''
+            ConfirmPassword: '',
+            role: 0
         },
         validationSchema: Yup.object({
-            name: Yup.string().required('Name is required'),
+            firstName: Yup.string().required('First Name is required'),
+            lastName: Yup.string().required('Last Name is required'),
             email: Yup.string().email('Invalid email address').required('Email is required'),
-            phone: Yup.string().required('Phone number is required'),
+            phoneNumber: Yup.string().required('Phone number is required'),
             password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-            confirmPassword: Yup.string()
+            ConfirmPassword: Yup.string()
                 .oneOf([Yup.ref('password'), undefined], 'Passwords must match')
                 .required('Confirm password is required'),
-            role: Yup.string().required('Role is required')
+            role: Yup.number().oneOf([0, 1], 'Invalid role').required('Role is required'),
         }),
         onSubmit: (values) => {
-            console.log(values);
-            setSuccessMessage('User added successfully!');
-            setOpen(true);
-            formik.resetForm();
+            dispatch(addUser({ token: userState.token, body: values })).then(() => {
+                dispatch(getAllUsers({ token: userState.token }))
+                navigate('/users')
+                setOpen(true);
+                formik.resetForm();
+                setSuccessMessage('User added successfully!');
+            })
         }
     });
 
@@ -74,13 +85,25 @@ const AddUser = () => {
                     <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
-                            label="Name"
-                            name="name"
+                            label="First Name"
+                            name="firstName"
                             variant="outlined"
-                            value={formik.values.name}
+                            value={formik.values.firstName}
                             onChange={formik.handleChange}
-                            error={formik.touched.name && Boolean(formik.errors.name)}
-                            helperText={formik.touched.name && formik.errors.name}
+                            error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                            helperText={formik.touched.firstName && formik.errors.firstName}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            label="Last Name"
+                            name="lastName"
+                            variant="outlined"
+                            value={formik.values.lastName}
+                            onChange={formik.handleChange}
+                            error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                            helperText={formik.touched.lastName && formik.errors.lastName}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -96,16 +119,16 @@ const AddUser = () => {
                             helperText={formik.touched.email && formik.errors.email}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
                             label="Phone Number"
-                            name="phone"
+                            name="phoneNumber"
                             variant="outlined"
-                            value={formik.values.phone}
+                            value={formik.values.phoneNumber}
                             onChange={formik.handleChange}
-                            error={formik.touched.phone && Boolean(formik.errors.phone)}
-                            helperText={formik.touched.phone && formik.errors.phone}
+                            error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                            helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                         />
                     </Grid>
                     <Grid item xs={6}>
@@ -138,13 +161,13 @@ const AddUser = () => {
                         <TextField
                             fullWidth
                             label="Confirm Password"
-                            name="confirmPassword"
+                            name="ConfirmPassword"
                             type={showConfirmPassword ? 'text' : 'password'}
                             variant="outlined"
-                            value={formik.values.confirmPassword}
+                            value={formik.values.ConfirmPassword}
                             onChange={formik.handleChange}
-                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                            error={formik.touched.ConfirmPassword && Boolean(formik.errors.ConfirmPassword)}
+                            helperText={formik.touched.ConfirmPassword && formik.errors.ConfirmPassword}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -170,8 +193,8 @@ const AddUser = () => {
                                 onChange={formik.handleChange}
                                 label="Role"
                             >
-                                <MenuItem value="admin">Admin</MenuItem>
-                                <MenuItem value="casher">Casher</MenuItem>
+                                <MenuItem value="1">Admin</MenuItem>
+                                <MenuItem value="0">Cashier</MenuItem>
                             </Select>
                             {formik.touched.role && formik.errors.role && (
                                 <span style={{ color: 'red' }}>{formik.errors.role}</span>
@@ -180,16 +203,16 @@ const AddUser = () => {
                     </Grid>
                 </Grid>
                 <Button type="submit" variant="contained" color="primary"
-                        sx={{
-                            mt: 2,
-                            p: 2,
-                            boxShadow: "none",
-                            ":hover": {
-                                boxShadow: "none"
-                            }
-                        }}>
-                        Add User
-                    </Button>
+                    sx={{
+                        mt: 2,
+                        p: 2,
+                        boxShadow: "none",
+                        ":hover": {
+                            boxShadow: "none"
+                        }
+                    }}>
+                    Add User
+                </Button>
             </form>
             <Snackbar open={open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
                 <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>

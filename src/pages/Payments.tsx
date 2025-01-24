@@ -15,9 +15,6 @@ import Paper from '@mui/material/Paper';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { visuallyHidden } from '@mui/utils';
-import { payments } from "./../data/payments.json";
 import { CSVLink } from "react-csv";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Stack, TableFooter, TextField } from '@mui/material';
 import { BiImport } from 'react-icons/bi';
@@ -28,58 +25,36 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import { useTheme } from '@mui/material/styles';
 import { Link } from "react-router-dom"
 import { MdDelete, MdEdit } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store/store';
+import { deletePayment, getAllPayments } from '../store/slices/paymentSlice';
+import { FaTrash } from 'react-icons/fa';
 
 interface Payment {
-    id: number;
-    customer_id: string;
+    id?: string;
     amount: number;
+    customerId: string;
     date: string;
     info: string;
 }
-
-const data: Payment[] = payments;
-
-function descendingComparator(a: Payment, b: Payment, orderBy: keyof Payment) {
-    if (b[orderBy] < a[orderBy]) {
-        return -1;
-    }
-    if (b[orderBy] > a[orderBy]) {
-        return 1;
-    }
-    return 0;
-}
-
-type Order = 'asc' | 'desc';
-
-function getComparator<Key extends keyof Payment>(
-    order: Order,
-    orderBy: Key
-): (a: Payment, b: Payment) => number {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
 interface HeadCell {
-    disablePadding: boolean;
     id: keyof Payment;
     label: string;
-    numeric: boolean;
 }
 
 const headCells: readonly HeadCell[] = [
-    { id: 'id', numeric: false, disablePadding: false, label: 'ID' },
-    { id: 'amount', numeric: false, disablePadding: false, label: 'Amount (EGP)' },
-    { id: 'customer_id', numeric: true, disablePadding: false, label: 'Customer' },
-    { id: 'date', numeric: true, disablePadding: false, label: 'Date' },
-    { id: 'info', numeric: true, disablePadding: false, label: 'Info' },
+    { id: 'id', label: 'ID' },
+    { id: 'amount', label: 'Amount (EGP)' },
+    { id: 'customerId', label: 'Customer' },
+    { id: 'date', label: 'Date' },
+    { id: 'info', label: 'Info' },
 ];
 
 interface EnhancedTableProps {
     numSelected: number;
     onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Payment) => void;
     onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    order: Order;
+    order: boolean;
     orderBy: string;
     rowCount: number;
 }
@@ -103,23 +78,13 @@ function EnhancedTableHead(props: EnhancedTableProps) {
                     />
                 </TableCell>
                 {headCells.map((headCell) => (
-                    <TableCell
-                        key={headCell.id}
-                        align={'left'}
-                        padding={headCell.disablePadding ? 'none' : 'normal'}
-                        sortDirection={orderBy === headCell.id ? order : false}
-                    >
+                    <TableCell key={headCell.id} align={'left'} padding={'normal'}>
                         <TableSortLabel
                             active={orderBy === headCell.id}
-                            direction={orderBy === headCell.id ? order : 'asc'}
+                            direction={orderBy === headCell.id ? (!order ? 'asc' : 'desc') : 'asc'}
                             onClick={createSortHandler(headCell.id)}
                         >
                             {headCell.label}
-                            {orderBy === headCell.id ? (
-                                <Box component="span" sx={visuallyHidden}>
-                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                </Box>
-                            ) : null}
                         </TableSortLabel>
                     </TableCell>
                 ))}
@@ -136,23 +101,34 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 interface EnhancedTableToolbarProps {
     numSelected: number;
     paymentsData: Payment[];
+    selected: number[];
     onSearch: (query: string) => void;
 }
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-    const { numSelected, paymentsData, onSearch } = props;
+    const { numSelected, paymentsData, selected, onSearch } = props;
     const [searchQuery, setSearchQuery] = React.useState('');
+    const dispatch = useDispatch<AppDispatch>();
+    const userState = useSelector((state: RootState) => state.users);
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setSearchQuery(value);
         onSearch(value);
     };
+    const handleBulkAction = (action: string) => {
+        if (action === 'delete') {
+            dispatch(deletePayment({ token: userState.token, ids: selected })).then(() => {
+                dispatch(getAllPayments({ token: userState.token }))
+            })
+        }
+    };
+
 
     const csvHeaders = [
         { label: 'ID', key: 'id' },
         { label: 'Amount', key: 'name' },
-        { label: 'Customer', key: 'customer_id' },
+        { label: 'Customer', key: 'customerId' },
         { label: 'Date', key: 'date' },
         { label: 'Info', key: 'info' },
     ];
@@ -176,11 +152,9 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
                 </Typography>
             )}
             {numSelected > 0 ? (
-                <Tooltip title="Delete">
-                    <IconButton>
-                        <DeleteIcon />
-                    </IconButton>
-                </Tooltip>
+                <IconButton color="error" onClick={() => handleBulkAction('delete')}>
+                    <FaTrash />
+                </IconButton>
             ) : (
                 <Stack direction="row" justifyContent="center" alignItems="center" gap={2}>
                     {/* CSV Export Button */}
@@ -306,13 +280,33 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 }
 
 const Payments = () => {
-    const [order, setOrder] = React.useState<Order>('asc');
+    const [order, setOrder] = React.useState<boolean>(true);
     const [orderBy, setOrderBy] = React.useState<keyof Payment>('id');
-    const [selected, setSelected] = React.useState<readonly number[]>([]);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [pageNumber, setPageNumber] = React.useState<number>(0);
+    const [pageSize, setPageSize] = React.useState<number>(10);
+    const [searchTerm, setSearchTerm] = React.useState<string>("");
+    const [selected, setSelected] = React.useState<number[]>([]);
     const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
     const [rowToDelete, setRowToDelete] = React.useState<number | null>(null);
+
+
+    const state = useSelector((state: RootState) => state.payments);
+    const userState = useSelector((state: RootState) => state.users);
+    const dispatch = useDispatch<AppDispatch>();
+    const data: Payment[] = state?.payments;
+    const totalCount = state.metaData.totalCount
+    React.useEffect(() => {
+        const params = {
+            PageNumber: pageNumber + 1,
+            PageSize: pageSize,
+            Search: searchTerm,
+            SortField: orderBy,
+            SortDescending: order,
+        }
+
+        dispatch(getAllPayments({ token: userState.token, params }))
+    }, [dispatch, order, orderBy, pageNumber, pageSize, searchTerm, userState.token])
+
 
     const handleDeleteClick = (rowId: number) => {
         setRowToDelete(rowId);
@@ -333,14 +327,17 @@ const Payments = () => {
         _event: React.MouseEvent<unknown>,
         property: keyof Payment,
     ) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
+        const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+        const capitalizedProperty = capitalizeFirstLetter(property as string);
+        const isAsc = orderBy === capitalizedProperty && order === false;
+        setOrder(isAsc ? true : false);
+        setOrderBy(capitalizedProperty as keyof Payment);
     };
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
-            const newSelected = data.map((n) => n.id);
+            const newSelected = data.map((n) => Number(n.id));
             setSelected(newSelected);
             return;
         }
@@ -349,7 +346,7 @@ const Payments = () => {
 
     const handleClick = (_event: React.MouseEvent<unknown>, id: number) => {
         const selectedIndex = selected.indexOf(id);
-        let newSelected: readonly number[] = [];
+        let newSelected: number[] = [];
 
         if (selectedIndex === -1) {
             newSelected = newSelected.concat(selected, id);
@@ -365,34 +362,30 @@ const Payments = () => {
         }
         setSelected(newSelected);
     };
-
     const handleChangePage = (_event: unknown, newPage: number) => {
-        setPage(newPage);
+        setPageNumber(newPage);
+        const params = {
+            PageNumber: pageNumber > 0 ? pageNumber : 1,
+            PageSize: pageSize,
+            Search: searchTerm,
+            SortField: orderBy,
+            SortDescending: order,
+        }
+        dispatch(getAllPayments({ token: userState.token, params }))
     };
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+        setPageSize(parseInt(event.target.value, 10));
+        setPageNumber(0);
     };
 
-    // Avoid a layout jump when reaching the last page with empty rows.
-    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - data.length) : 0;
-
-    const visibleRows = React.useMemo(
-        () =>
-            [...data]
-                .sort(getComparator(order, orderBy))
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-        [order, orderBy, page, rowsPerPage],
-    );
-
     const handleSearch = (searchTerm: string) => {
-        console.log(searchTerm);
+        setSearchTerm(searchTerm)
     }
 
     return (
         <Paper elevation={0} sx={{ width: '100%', overflow: 'hidden' }}>
-            <EnhancedTableToolbar numSelected={selected.length} paymentsData={data} onSearch={handleSearch} />
+            <EnhancedTableToolbar numSelected={selected.length} selected={selected} paymentsData={data} onSearch={handleSearch} />
             <TableContainer sx={{ border: "1px solid #eee" }}>
                 <Table stickyHeader aria-label="sticky table">
                     <EnhancedTableHead
@@ -404,9 +397,9 @@ const Payments = () => {
                         rowCount={data.length}
                     />
                     <TableBody>
-                        {visibleRows.map((row) => {
-                            const isItemSelected = selected.indexOf(row.id) !== -1;
-                            const labelId = `enhanced-table-checkbox-${row.id}`;
+                        {data.map((row) => {
+                            const isItemSelected = selected.indexOf(Number(row.id)) !== -1;
+                            const labelId = `enhanced-table-checkbox-${Number(row.id)}`;
 
                             return (
                                 <TableRow
@@ -414,27 +407,27 @@ const Payments = () => {
                                     role="checkbox"
                                     aria-checked={isItemSelected}
                                     tabIndex={-1}
-                                    key={row.id}
+                                    key={Number(row.id)}
                                     selected={isItemSelected}
                                 >
                                     <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
                                         <Checkbox
                                             color="primary"
-                                            onClick={(event) => handleClick(event, row.id)}
+                                            onClick={(event) => handleClick(event, Number(row.id))}
                                             checked={isItemSelected}
                                             inputProps={{ 'aria-labelledby': labelId }}
                                         />
                                     </TableCell>
-                                    <TableCell>{row.id}</TableCell>
+                                    <TableCell>{Number(row.id)}</TableCell>
                                     <TableCell>{row.amount}</TableCell>
-                                    <TableCell>{row.customer_id}</TableCell>
+                                    <TableCell>{row.customerId}</TableCell>
                                     <TableCell>{row.date}</TableCell>
                                     <TableCell>{row.info}</TableCell>
                                     <TableCell onClick={(e) => e.stopPropagation()}>
                                         <Stack direction="row" spacing={1}>
                                             <IconButton
                                                 component={Link}
-                                                to={`/payments/${row.id}/update`}
+                                                to={`/payments/${Number(row.id)}/update`}
                                                 color="primary"
                                                 sx={{
                                                     border: "1px solid"
@@ -451,7 +444,7 @@ const Payments = () => {
                                                 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteClick(row.id);
+                                                    handleDeleteClick(Number(row.id));
                                                 }}
                                             >
                                                 <MdDelete />
@@ -461,19 +454,14 @@ const Payments = () => {
                                 </TableRow>
                             );
                         })}
-                        {emptyRows > 0 && (
-                            <TableRow style={{ height: 53 * emptyRows }}>
-                                <TableCell colSpan={6} />
-                            </TableRow>
-                        )}
                     </TableBody>
                     <TableFooter>
                         <TableRow>
                             <TablePagination
-                                rowsPerPageOptions={[5, 10, 25, { value: data.length, label: 'All' }]}
-                                count={data.length}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
+                                rowsPerPageOptions={[5, 10, 25, { value: totalCount, label: 'All' }]}
+                                count={totalCount}
+                                rowsPerPage={pageSize}
+                                page={pageNumber}
                                 slotProps={{
                                     select: {
                                         inputProps: {

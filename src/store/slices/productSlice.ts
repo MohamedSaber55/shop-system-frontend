@@ -7,7 +7,6 @@ interface GetAllProductsParams {
     token: string | null;
     params?: Record<string, unknown>;
 }
-
 interface Product {
     id?: number | string;
     name: string;
@@ -28,7 +27,16 @@ interface AddProductResponse {
 }
 interface AddProductParams {
     token: string | null;
-    body: Product[];
+    body: {
+        id?: number | string;
+        name: string;
+        quantity: number | string;
+        isStock: boolean;
+        purchasePrice: number | string;
+        sellingPrice: number | string;
+        categoryId: string;
+        uniqueNumber: number | string;
+    }[];
 }
 interface GetProductResponse {
     data: Product;
@@ -219,12 +227,12 @@ export const addProduct = createAsyncThunk<AddProductResponse, AddProductParams>
             });
             return response.data;
         } catch (error) {
+            console.log(error);
             const typedError = error as AxiosError;
             return rejectWithValue(typedError.response?.errors || "An error occurred");
         }
     }
 );
-
 
 // Define the initial state type
 interface productState {

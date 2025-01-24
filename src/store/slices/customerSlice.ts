@@ -2,9 +2,38 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import axios from 'axios'
 import { apiUrl, tokenBearerKey } from '../../utils/constants'
 
+interface CustomerOrder {
+    id: number;
+    orderDate: string;
+    notes: string;
+    totalAmount: number;
+    totalDiscount: number;
+    finalAmount: number;
+    customer: {
+        id: number;
+        name: string;
+        phone: string;
+    }
+    orderItems: {
+        productId: number;
+        productName: string;
+        sellingPrice: number;
+        quantity: number;
+        discount: number;
+        subtotal: number;
+    }[];
+}
 interface GetAllCustomersParams {
     token: string | null;
     params?: Record<string, unknown>;
+}
+interface GetCustomersPayments {
+    token: string | null;
+    customerId: string | undefined;
+}
+interface GetCustomersPaymentsResponse {
+    message: string;
+    data: [];
 }
 interface MetaData {
     totalCount: number;
@@ -39,6 +68,15 @@ interface GetCustomerResponse {
 interface GetAllCustomersResponse {
     data: {
         items: Customer[],
+        totalCount: number;
+        pageNumber: number;
+        pageSize: number;
+        totalPages: number;
+    };
+}
+interface GetCustomerOrdersResponse {
+    data: {
+        items: CustomerOrder[],
         totalCount: number;
         pageNumber: number;
         pageSize: number;
@@ -96,6 +134,42 @@ export const getAllCustomers = createAsyncThunk<GetAllCustomersResponse, GetAllC
         }
     }
 );
+export const getCustomerPayments = createAsyncThunk<GetCustomersPaymentsResponse, GetCustomersPayments>(
+    "customers/getCustomerPayments",
+    async ({ token, customerId }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetCustomersPaymentsResponse>(`${apiUrl}/Customers/${customerId}/payments`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+            });
+            return response.data;
+        } catch (error) {
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
+export const getCustomerOrders = createAsyncThunk<GetCustomerOrdersResponse, GetCustomersPayments>(
+    "customers/getCustomerOrders",
+    async ({ token, customerId }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetCustomerOrdersResponse>(`${apiUrl}/Order/customer/${customerId}/orders`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+            });
+            console.log(response.data);
+
+            return response.data;
+        } catch (error) {
+            console.log(error);
+
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
 
 export const getCustomerInfo = createAsyncThunk<GetCustomerResponse, GetCustomerInfoParams>(
     "customers/getCustomerInfo",
@@ -119,8 +193,6 @@ export const getCustomerInfo = createAsyncThunk<GetCustomerResponse, GetCustomer
 export const deleteCustomer = createAsyncThunk<DeleteCustomerResponse, DeleteCustomerInfoParams>(
     "customers/deleteCustomer",
     async ({ token, ids }, { rejectWithValue }) => {
-        console.log(ids);
-
         try {
             const formData = new FormData();
             ids?.forEach((id) => formData.append("ids", id.toString()));
@@ -140,7 +212,6 @@ export const deleteCustomer = createAsyncThunk<DeleteCustomerResponse, DeleteCus
             return response.data;
         } catch (error) {
             const typedError = error as AxiosError;
-            console.log(error);
             return rejectWithValue(typedError.response?.errors || "An error occurred");
         }
     }
@@ -185,6 +256,8 @@ interface CustomerState {
     customers: Customer[];
     metaData: MetaData;
     customer: Customer | null;
+    customer_payments: [];
+    customer_orders: CustomerOrder[];
     loading: boolean;
     message: string;
     rowsEffected: number | null;
@@ -194,6 +267,8 @@ interface CustomerState {
 // Initial state
 const initialState: CustomerState = {
     customers: [],
+    customer_payments: [],
+    customer_orders: [],
     customer: {
         id: "",
         name: '',
@@ -252,6 +327,33 @@ const customerSlice = createSlice({
                 state.customer = action.payload.data;
             })
             .addCase(getCustomerInfo.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getCustomerPayments------------------------------------------
+            .addCase(getCustomerPayments.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getCustomerPayments.fulfilled, (state, action: PayloadAction<GetCustomersPaymentsResponse>) => {
+                state.loading = false;
+                state.message = action.payload.message;
+                state.customer_payments = action.payload.data;
+            })
+            .addCase(getCustomerPayments.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getCustomerOrders------------------------------------------
+            .addCase(getCustomerOrders.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getCustomerOrders.fulfilled, (state, action: PayloadAction<GetCustomerOrdersResponse>) => {
+                state.loading = false;
+                state.customer_orders = action.payload.data?.items;
+            })
+            .addCase(getCustomerOrders.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })

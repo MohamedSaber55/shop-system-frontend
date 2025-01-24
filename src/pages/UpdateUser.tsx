@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -18,75 +18,62 @@ import {
     IconButton,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
-import { getUserInfo, updateUser } from '../store/slices/accountSlice';
-
-type User = {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    role: number;
-};
+import { updateUser, getAllUsers, getUserInfo } from '../store/slices/accountSlice';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const UpdateUser = () => {
     const [open, setOpen] = React.useState(false);
     const [successMessage, setSuccessMessage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-    const { id } = useParams()
     const dispatch = useDispatch<AppDispatch>();
-    const state = useSelector((state: RootState) => state.users);
+    const userState = useSelector((state: RootState) => state.users);
+    const navigate = useNavigate();
+    const { id } = useParams();
+    const user = userState.user;
 
-    const user: User = state?.user || {
-        id: "",
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        role: 0,
-    };
-
-    React.useEffect(() => {
-        if (state.token) {
-            dispatch(getUserInfo({ token: state.token, userId: id }));
+    useEffect(() => {
+        if (id) {
+            dispatch(getUserInfo({ token: userState.token, userId: id }));
         }
-    }, [dispatch, id, state.token]);
+    }, [id, dispatch, userState.token]);
 
-    // const initialData = {
-    //     name: "Mohamed Saber",
-    //     email: "admin@admin.com",
-    //     phone: "+201210529969",
-    //     role: "admin",
-    // }
     const formik = useFormik({
+        enableReinitialize: true,
         initialValues: {
+            id: user?.id || '',
             firstName: user?.firstName || '',
             lastName: user?.lastName || '',
             email: user?.email || '',
-            phone: user?.phone || '',
+            phoneNumber: user?.phoneNumber || '',
             password: '',
-            confirmPassword: '',
-            role: user?.role || ''
+            ConfirmPassword: '',
+            role: user?.role || 0,
         },
-        enableReinitialize: true,
         validationSchema: Yup.object({
-            name: Yup.string().required('Name is required'),
+            firstName: Yup.string().required('First Name is required'),
+            lastName: Yup.string().required('Last Name is required'),
             email: Yup.string().email('Invalid email address').required('Email is required'),
-            phone: Yup.string().required('Phone number is required'),
+            phoneNumber: Yup.string().required('Phone number is required'),
             password: Yup.string().min(6, 'Password must be at least 6 characters'),
-            confirmPassword: Yup.string()
+            ConfirmPassword: Yup.string()
                 .oneOf([Yup.ref('password'), undefined], 'Passwords must match'),
-            role: Yup.string().required('Role is required')
+            role: Yup.number().oneOf([0, 1], 'Invalid role').required('Role is required'),
         }),
         onSubmit: (values) => {
-            dispatch(updateUser({ body: values, token: state.token , userId: id }));
-            setSuccessMessage('User updated successfully!');
-            setOpen(true);
-        }
+            const filteredValues = Object.fromEntries(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                Object.entries(values).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+            );
+            dispatch(updateUser({ token: userState.token, body: filteredValues })).then(() => {
+                dispatch(getAllUsers({ token: userState.token }));
+                navigate('/users');
+                setOpen(true);
+                setSuccessMessage('User updated successfully!');
+            });
+        },
     });
 
     const togglePasswordVisibility = () => {
@@ -112,7 +99,7 @@ const UpdateUser = () => {
                     <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
-                            label="FirstName"
+                            label="First Name"
                             name="firstName"
                             variant="outlined"
                             value={formik.values.firstName}
@@ -124,7 +111,7 @@ const UpdateUser = () => {
                     <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
-                            label="LastName"
+                            label="Last Name"
                             name="lastName"
                             variant="outlined"
                             value={formik.values.lastName}
@@ -150,12 +137,12 @@ const UpdateUser = () => {
                         <TextField
                             fullWidth
                             label="Phone Number"
-                            name="phone"
+                            name="phoneNumber"
                             variant="outlined"
-                            value={formik.values.phone}
+                            value={formik.values.phoneNumber}
                             onChange={formik.handleChange}
-                            error={formik.touched.phone && Boolean(formik.errors.phone)}
-                            helperText={formik.touched.phone && formik.errors.phone}
+                            error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                            helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                         />
                     </Grid>
                     <Grid item xs={6}>
@@ -188,13 +175,13 @@ const UpdateUser = () => {
                         <TextField
                             fullWidth
                             label="Confirm Password"
-                            name="confirmPassword"
+                            name="ConfirmPassword"
                             type={showConfirmPassword ? 'text' : 'password'}
                             variant="outlined"
-                            value={formik.values.confirmPassword}
+                            value={formik.values.ConfirmPassword}
                             onChange={formik.handleChange}
-                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                            error={formik.touched.ConfirmPassword && Boolean(formik.errors.ConfirmPassword)}
+                            helperText={formik.touched.ConfirmPassword && formik.errors.ConfirmPassword}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -220,8 +207,8 @@ const UpdateUser = () => {
                                 onChange={formik.handleChange}
                                 label="Role"
                             >
-                                <MenuItem value="1">Admin</MenuItem>
-                                <MenuItem value="0">Casher</MenuItem>
+                                <MenuItem value={1}>Admin</MenuItem>
+                                <MenuItem value={0}>Cashier</MenuItem>
                             </Select>
                             {formik.touched.role && formik.errors.role && (
                                 <span style={{ color: 'red' }}>{formik.errors.role}</span>
@@ -229,15 +216,7 @@ const UpdateUser = () => {
                         </FormControl>
                     </Grid>
                 </Grid>
-                <Button type="submit" variant="contained" color="primary"
-                    sx={{
-                        mt: 2,
-                        p: 2,
-                        boxShadow: "none",
-                        ":hover": {
-                            boxShadow: "none"
-                        }
-                    }}>
+                <Button type="submit" variant="contained" color="primary" sx={{ mt: 2, p: 2 }}>
                     Update User
                 </Button>
             </form>

@@ -32,12 +32,16 @@ import Payments from "../pages/Payments";
 import AddPayment from "../pages/AddPayment";
 import UpdatePayment from "../pages/UpdatePayment";
 import RouterGuard from "../utils/RouterGuard";
+import Sessions from "../pages/Sessions";
+import Profits from "../pages/Profits";
 
 
 const router = createBrowserRouter([
     {
         path: "/", element: <Layout />, children: [
             { index: true, element: (<RouterGuard><Home /></RouterGuard>), },
+            { path: "/sessions", element: <RouterGuard><Sessions /></RouterGuard> },
+            { path: "/profits", element: <RouterGuard><Profits /></RouterGuard> },
             { path: "/customers", element: <RouterGuard><Customers /></RouterGuard> },
             { path: "/customers/:id", element: <RouterGuard><Customer /></RouterGuard> },
             { path: "/orders", element: <RouterGuard><Sales /></RouterGuard> },

@@ -39,6 +39,10 @@ interface GetExpenseResponse {
     data: Expense;
     message: string
 }
+interface GetTotalExpenseResponse {
+    data: number | null;
+    message: string
+}
 
 interface GetAllExpensesResponse {
     data: {
@@ -111,7 +115,24 @@ export const getExpenseInfo = createAsyncThunk<GetExpenseResponse, GetExpenseInf
                 },
                 params: params,
             });
-            
+
+            return response.data;
+        } catch (error) {
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
+export const getTotalExpenses = createAsyncThunk<GetTotalExpenseResponse, GetExpenseInfoParams>(
+    "expenses/getTotalExpenses",
+    async ({ token }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetTotalExpenseResponse>(`${apiUrl}/expenses/total`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+            });
+
             return response.data;
         } catch (error) {
             const typedError = error as AxiosError;
@@ -171,7 +192,7 @@ export const addExpense = createAsyncThunk<AddExpenseResponse, AddExpenseParams>
             });
             return response.data;
         } catch (error) {
-            const typedError = error as AxiosError;            
+            const typedError = error as AxiosError;
             return rejectWithValue(typedError.response?.errors || "An error occurred");
         }
     }
@@ -185,6 +206,7 @@ interface expenseState {
     loading: boolean;
     message: string;
     metaData: MetaData;
+    total_expenses: null | number;
     rowsEffected: null | number;
     error: string | null;
 }
@@ -207,6 +229,7 @@ const initialState: expenseState = {
     },
     message: "",
     rowsEffected: null,
+    total_expenses: 0,
     loading: false,
     error: null,
 };
@@ -246,6 +269,20 @@ const expenseSlice = createSlice({
                 state.expense = action.payload.data;
             })
             .addCase(getExpenseInfo.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getTotalExpenses------------------------------------------
+            .addCase(getTotalExpenses.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getTotalExpenses.fulfilled, (state, action: PayloadAction<GetTotalExpenseResponse>) => {
+                state.loading = false;
+                state.message = action.payload.message
+                state.total_expenses = action.payload.data;
+            })
+            .addCase(getTotalExpenses.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })

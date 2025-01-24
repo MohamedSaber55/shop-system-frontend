@@ -56,7 +56,6 @@ const UpdateCustomer: React.FC<Props> = ({ open, onClose, customerData }) => {
             phone: Yup.string().required('Phone number is required'),
         }),
         onSubmit: (values) => {
-            console.log(values);
             if (customerData) {
                 setSuccessMessage('Customer updated successfully!');
                 dispatch(updateCustomer({ body: values, customerId: customerData.id, token: userState.token })).then(() => {

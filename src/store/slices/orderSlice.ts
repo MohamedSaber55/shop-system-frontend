@@ -9,19 +9,36 @@ interface GetAllOrdersParams {
 }
 interface OrderItem {
     productId: number;
+    productName: number;
     quantity: number;
     discount: number;
-    subTotal: number;
+    subtotal: number;
 }
+interface Profit {
+    orderId: string;
+    profit: number;
+    orderDate: string;
+}
+
 interface Order {
     id?: string;
     orderDate?: string;
     userId?: string;
+    notes?: string;
+    user?: {
+        id?: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    };
     totalDiscount?: number;
     totalAmount?: number;
-    customerId: number;
+    customer: {
+        id: number;
+        name: string;
+        phone: string;
+    };
     orderItems: OrderItem[];
-
 }
 interface AddOrderResponse {
     message: string;
@@ -49,9 +66,9 @@ interface MetaData {
     pageSize: number;
     totalPages: number;
 }
-interface GetAllOrdersResponse {
+interface GetAllOrdersResponse<T> {
     data: {
-        items: Order[];
+        items: T[];
         totalCount: number;
         pageNumber: number;
         pageSize: number;
@@ -62,6 +79,10 @@ interface AxiosError {
     response?: {
         errors?: string[];
     };
+}
+interface GetTodayOrdersResponse {
+    message: string;
+    data: Order[];
 }
 interface DeleteOrderResponse {
     message: string;
@@ -95,11 +116,11 @@ interface UpdateOrderParams {
 }
 
 // Define the async thunk with types
-export const getAllOrders = createAsyncThunk<GetAllOrdersResponse, GetAllOrdersParams>(
+export const getAllOrders = createAsyncThunk<GetAllOrdersResponse<Order>, GetAllOrdersParams>(
     "Orders/getAllOrders",
     async ({ token, params }, { rejectWithValue }) => {
         try {
-            const response = await axios.get<GetAllOrdersResponse>(`${apiUrl}/Order`, {
+            const response = await axios.get<GetAllOrdersResponse<Order>>(`${apiUrl}/Order`, {
                 headers: {
                     Authorization: `${tokenBearerKey}${token}`,
                 },
@@ -112,11 +133,66 @@ export const getAllOrders = createAsyncThunk<GetAllOrdersResponse, GetAllOrdersP
         }
     }
 );
+export const getAllOrdersProfits = createAsyncThunk<GetAllOrdersResponse<Profit>, GetAllOrdersParams>(
+    "Orders/getAllOrdersProfits",
+    async ({ token, params }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetAllOrdersResponse<Profit>>(`${apiUrl}/Admin/profits`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+                params: params,
+            });
+            return response.data;
+        } catch (error) {
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
+export const getTodayOrders = createAsyncThunk<GetTodayOrdersResponse, GetAllOrdersParams>(
+    "Orders/getTodayOrders",
+    async ({ token, params }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<GetTodayOrdersResponse>(`${apiUrl}/Admin/todayOrders`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+                params: params,
+            });
+            console.log(response.data);
+
+            return response.data;
+        } catch (error) {
+            console.log(error);
+
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
 export const getOrderInfo = createAsyncThunk<GetOrderResponse, GetOrderInfoParams>(
     "Orders/getOrderInfo",
     async ({ token, orderId }, { rejectWithValue }) => {
         try {
             const response = await axios.get<GetOrderResponse>(`${apiUrl}/Order/${orderId}`, {
+                headers: {
+                    Authorization: `${tokenBearerKey}${token}`,
+                },
+            });
+
+            return response.data;
+        } catch (error) {
+            const typedError = error as AxiosError;
+            return rejectWithValue(typedError.response?.errors || "An error occurred");
+        }
+    }
+);
+export const getTotalRevenue = createAsyncThunk<DeleteOrderResponse, GetAllOrdersParams>(
+    "Orders/getTotalRevenue",
+    async ({ token }, { rejectWithValue }) => {
+        try {
+            const response = await axios.get<DeleteOrderResponse>(`${apiUrl}/Order/sumofamountofallorders`, {
                 headers: {
                     Authorization: `${tokenBearerKey}${token}`,
                 },
@@ -214,7 +290,6 @@ export const printInvoice = createAsyncThunk<void, GetOrderInfoParams>(
 
 //             return response.data;
 //         } catch (error) {
-//             console.log(error);
 //             const typedError = error as AxiosError;
 //             console.error("Error deleting Orders:", error);
 //             return rejectWithValue(typedError.response?.errors || "An error occurred");
@@ -257,6 +332,7 @@ export const updateOrder = createAsyncThunk<AddOrderResponse, UpdateOrderParams>
             });
             return response.data;
         } catch (error) {
+            console.log(error);
             const typedError = error as AxiosError;
             return rejectWithValue(typedError.response?.errors || "An error occurred");
         }
@@ -284,10 +360,13 @@ export const addOrder = createAsyncThunk<AddOrderResponse, AddOrderParams>(
 // Define the initial state type
 interface OrdersState {
     orders: Order[];
+    profits: Profit[];
+    today_orders: Order[];
     order: Order | null;
     loading: boolean;
     metaData: MetaData;
     message: string;
+    total_revenue: number | null;
     rowsEffected: number | null;
     error: string | null;
 }
@@ -295,9 +374,15 @@ interface OrdersState {
 // Initial state
 const initialState: OrdersState = {
     orders: [],
+    profits: [],
+    today_orders: [],
     order: {
         id: '',
-        customerId: 0,
+        customer: {
+            id: 0,
+            name: '',
+            phone: '',
+        },
         orderDate: '',
         orderItems: [],
         userId: "",
@@ -312,6 +397,7 @@ const initialState: OrdersState = {
     },
     message: "",
     rowsEffected: 0,
+    total_revenue: 0,
     loading: false,
     error: null,
 };
@@ -328,7 +414,7 @@ const ordersSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getAllOrders.fulfilled, (state, action: PayloadAction<GetAllOrdersResponse>) => {
+            .addCase(getAllOrders.fulfilled, (state, action: PayloadAction<GetAllOrdersResponse<Order>>) => {
                 state.loading = false;
                 state.orders = action.payload.data.items;
                 state.metaData.pageNumber = action.payload.data.pageNumber;
@@ -337,6 +423,36 @@ const ordersSlice = createSlice({
                 state.metaData.totalPages = action.payload.data.totalPages;
             })
             .addCase(getAllOrders.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getAllOrdersProfits------------------------------------------
+            .addCase(getAllOrdersProfits.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getAllOrdersProfits.fulfilled, (state, action: PayloadAction<GetAllOrdersResponse<Profit>>) => {
+                state.loading = false;
+                state.profits = action.payload.data.items;
+                state.metaData.pageNumber = action.payload.data.pageNumber;
+                state.metaData.pageSize = action.payload.data.pageSize;
+                state.metaData.totalCount = action.payload.data.totalCount;
+                state.metaData.totalPages = action.payload.data.totalPages;
+            })
+            .addCase(getAllOrdersProfits.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getTodayOrders------------------------------------------
+            .addCase(getTodayOrders.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getTodayOrders.fulfilled, (state, action: PayloadAction<GetTodayOrdersResponse>) => {
+                state.loading = false;
+                state.today_orders = action.payload.data;
+            })
+            .addCase(getTodayOrders.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
@@ -351,6 +467,20 @@ const ordersSlice = createSlice({
                 state.order = action.payload.data;
             })
             .addCase(getOrderInfo.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            //------------------------------- getTotalRevenue------------------------------------------
+            .addCase(getTotalRevenue.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getTotalRevenue.fulfilled, (state, action: PayloadAction<DeleteOrderResponse>) => {
+                state.loading = false;
+                state.message = action.payload.message
+                state.total_revenue = action.payload.data;
+            })
+            .addCase(getTotalRevenue.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })

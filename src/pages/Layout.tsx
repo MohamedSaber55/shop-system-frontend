@@ -21,19 +21,19 @@ import ListItemText from '@mui/material/ListItemText';
 import { MdCategory, MdDashboard } from "react-icons/md";
 // import { RiShoppingCartFill, RiBarChart2Fill } from "react-icons/ri";
 import { RiBankFill, RiShoppingCartFill } from "react-icons/ri";
-import { FaCog, FaShoppingBag, FaSignOutAlt, FaUsers } from "react-icons/fa";
+import { FaCog, FaShoppingBag, FaSignOutAlt, FaUserLock, FaUsers } from "react-icons/fa";
 import { HiOfficeBuilding } from "react-icons/hi";
 import { FaUser } from "react-icons/fa6";
 import { LuCalculator } from "react-icons/lu";
-import ScrollToTopButton from "../components/ScrollToTopButton";
-
+// import ScrollToTopButton from "../components/ScrollToTopButton";
+import { GiProfit } from "react-icons/gi";
 // assets--------------------------------------
 import logo from "./../assets/mainlogo.png"
 import { Avatar, Menu, MenuItem, Stack } from "@mui/material";
 import { AiFillProduct } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../store/store";
-import { logout } from "../store/slices/accountSlice";
+import { logout } from "../store/slices/accountSlice";``
 const drawerWidth = 240;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -145,6 +145,11 @@ const routes = [
         icon: <RiShoppingCartFill size={22} />,
     },
     {
+        link: '/profits',
+        title: 'Profits',
+        icon: <GiProfit  size={22} />,
+    },
+    {
         link: '/merchants',
         title: 'Merchants',
         icon: <HiOfficeBuilding size={22} />,
@@ -169,12 +174,17 @@ const routes = [
         title: 'Users',
         icon: <FaUser size={22} />,
     },
+    {
+        link: '/sessions',
+        title: 'Sessions',
+        icon: <FaUserLock size={22} />,
+    },
 ];
 const Layout = () => {
     const theme = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = React.useState(localStorage.getItem("sideNavOpen") == "true" ? true : false);
     const [profileAnchorEl, setProfileAnchorEl] = React.useState<HTMLElement | null>(null);
     const dispatch = useDispatch<AppDispatch>();
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -187,10 +197,12 @@ const Layout = () => {
 
     const handleDrawerOpen = () => {
         setOpen(true);
+        localStorage.setItem("sideNavOpen", "true");
     };
 
     const handleDrawerClose = () => {
         setOpen(false);
+        localStorage.setItem("sideNavOpen", "false");
     };
 
     const handleLogout = () => {

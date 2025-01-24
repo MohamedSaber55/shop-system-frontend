@@ -25,6 +25,8 @@ import { getCustomerInfo } from "../store/slices/customerSlice";
 // import { getProductInfo } from "../store/slices/productSlice";
 interface OrderItem {
     productId: number;
+    productName: string;
+    sellingPrice: string;
     quantity: number;
     discount: number;
     subTotal: number;
@@ -33,10 +35,10 @@ interface Order {
     id?: string;
     orderDate?: string;
     notes?: string;
-    userId?: string;
+    user?: object;
     totalDiscount?: number;
     totalAmount?: number;
-    customerId: number;
+    customer: object;
     orderItems: OrderItem[];
 }
 
@@ -54,20 +56,14 @@ const OrderPage: React.FC = () => {
     }, [dispatch, id, userState.token])
 
     React.useEffect(() => {
-        if (order?.customerId)
-            dispatch(getCustomerInfo({ token: userState.token, customerId: String(order.customerId) }))
-    }, [dispatch, order?.customerId, userState.token])
+        if (order?.customer?.id)
+            dispatch(getCustomerInfo({ token: userState.token, customerId: String(order.customer?.id) }))
+    }, [dispatch, order?.customer?.id, userState.token])
 
     React.useEffect(() => {
-        if (order?.userId)
-            dispatch(getUserInfo({ token: userState.token, userId: String(order.userId) }))
-    }, [dispatch, order?.userId, userState.token])
-
-    // const getProductData = async (productId: string) => {
-    //     const dispatchData = await dispatch(getProductInfo({ token: userState.token, productId }))
-    //     console.log(dispatchData?.payload);
-    //     // return (dispatchData?.payload);
-    // }
+        if (order?.user?.id)
+            dispatch(getUserInfo({ token: userState.token, userId: String(order.user?.id) }))
+    }, [dispatch, order?.user?.id, userState.token])
 
     const printInvoiceFunc = async (orderId: string) => {
         dispatch(printInvoice({ token: userState.token, orderId }))
@@ -93,7 +89,7 @@ const OrderPage: React.FC = () => {
         csvRows.push(`Customer Phone,${customer?.phone}`);
         csvRows.push(`Cashier ID,${cashier?.id}`);
         csvRows.push(`Cashier Name,${cashier?.firstName} ${cashier?.lastName}`);
-        csvRows.push(`Cashier Phone,${cashier?.phone}`);
+        csvRows.push(`Cashier Phone,${cashier?.phoneNumber}`);
         csvRows.push(""); // Blank line
 
         // Products Header
@@ -231,7 +227,7 @@ const OrderPage: React.FC = () => {
                             <Stack gap={2}>
                                 <Typography><strong>Cashier ID: </strong>{cashier?.id}</Typography>
                                 <Typography><strong>Cashier Name:</strong> {cashier?.firstName} {cashier?.lastName}</Typography>
-                                <Typography><strong>Cashier Phone:</strong> {cashier?.phone}</Typography>
+                                <Typography><strong>Cashier Phone:</strong> {cashier?.phoneNumber}</Typography>
                             </Stack>
                         </CardContent>
                     </Card>
@@ -252,7 +248,7 @@ const OrderPage: React.FC = () => {
                                 <TableCell>Product ID</TableCell>
                                 <TableCell>Product Name</TableCell>
                                 <TableCell>Quantity</TableCell>
-                                {/* <TableCell>Price per Unit</TableCell> */}
+                                <TableCell>Price per Unit</TableCell>
                                 <TableCell>Discount</TableCell>
                                 <TableCell>Total Price</TableCell>
                             </TableRow>
@@ -263,11 +259,11 @@ const OrderPage: React.FC = () => {
                                 return (
                                     <TableRow key={product.productId}>
                                         <TableCell>{product.productId}</TableCell>
-                                        {/* <TableCell>{getProductData(String(product.productId))?.name}</TableCell> */}
-                                        <TableCell>{product.productId}</TableCell>
+                                        <TableCell>{product.productName}</TableCell>
                                         <TableCell>{product.quantity}</TableCell>
-                                        <TableCell>EGP {product.discount.toFixed(2)}</TableCell>
-                                        <TableCell>EGP {product.subTotal.toFixed(2)}</TableCell>
+                                        <TableCell>{product.sellingPrice}</TableCell>
+                                        <TableCell>EGP {product.discount}</TableCell>
+                                        <TableCell>EGP {product.subTotal}</TableCell>
                                     </TableRow>
                                 )
                             })}

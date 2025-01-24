@@ -82,7 +82,7 @@ const AddProduct = () => {
 
             uniqueNumber: Yup.string()
                 .required('Unique number is required')
-                .matches(/^[A-Z0-9]{8}$/, 'Unique number must be 8 alphanumeric characters in uppercase'),
+                // .matches(/^[A-Z0-9]{8}$/, 'Unique number must be 8 alphanumeric characters in uppercase'),
         }),
         onSubmit: (values) => {
             dispatch(addProduct({ body: [values], token: userState.token })).then(() => {

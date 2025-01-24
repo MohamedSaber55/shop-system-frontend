@@ -32,17 +32,28 @@ import { deleteOrder, getAllOrders } from '../store/slices/orderSlice';
 
 interface OrderItem {
     productId: number;
+    productName: number;
     quantity: number;
     discount: number;
-    subTotal: number;
+    subtotal: number;
 }
 interface Order {
     id?: string;
     orderDate?: string;
     userId?: string;
+    user?: {
+        id?: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+    };
     totalDiscount?: number;
     totalAmount?: number;
-    customerId: number;
+    customer: {
+        id: number;
+        name: string;
+        phone: string;
+    };
     orderItems: OrderItem[];
 }
 interface HeadCell {
@@ -53,7 +64,7 @@ interface HeadCell {
 const headCells: readonly HeadCell[] = [
     { id: 'id', label: 'ID' },
     { id: 'userId', label: 'Casher' },
-    { id: 'customerId', label: 'Customer' },
+    { id: 'customer', label: 'Customer' },
     { id: 'totalAmount', label: 'Total amount (EGP)' },
     { id: 'totalDiscount', label: 'Discount' },
     { id: 'orderDate', label: 'Order Date' },
@@ -408,6 +419,7 @@ const Sales = () => {
                         {data.map((row) => {
                             const isItemSelected = selected.indexOf(Number(row.id)) !== -1;
                             const labelId = `enhanced-table-checkbox-${row.id}`;
+                            console.log(row);
 
                             return (
                                 <TableRow
@@ -433,8 +445,8 @@ const Sales = () => {
                                     <TableCell>
                                         {row.id}
                                     </TableCell>
-                                    <TableCell>{row.userId}</TableCell>
-                                    <TableCell>{row.customerId}</TableCell>
+                                    <TableCell>{row.user?.firstName} {row.user?.lastName}</TableCell>
+                                    <TableCell>{row.customer?.name}</TableCell>
                                     <TableCell>{row.totalAmount}</TableCell>
                                     <TableCell>{row.totalDiscount}</TableCell>
                                     <TableCell>
